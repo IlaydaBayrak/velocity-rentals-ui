@@ -64,10 +64,10 @@ export default {
           ring: "hsl(var(--sidebar-ring))"
         },
         rentacar: {
-          blue: "#0EA5E9",
-          orange: "#FF7E33",
+          blue: "#1A365D",
+          orange: "#E67E22",
           gray: "#F1F5F9",
-          "dark-blue": "#0C4A6E"
+          "dark-blue": "#0F2942"
         }
       },
       borderRadius: {

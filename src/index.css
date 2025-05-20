@@ -134,7 +134,7 @@
     }
   }
 
-  /* Yeni animasyonlar ve geçişler */
+  /* Enhanced animations and transitions */
   .card-hover-effect {
     @apply transition-all duration-300 hover:shadow-xl;
   }
@@ -240,5 +240,93 @@
   .car-3d-hover:hover {
     transform: perspective(1000px) rotateY(5deg) rotateX(3deg);
   }
-}
 
+  /* NEW ENHANCED TRANSITIONS */
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  .road-animation {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .road-animation::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #333, #333 10px, #fff 10px, #fff 20px);
+    animation: roadMove 0.5s linear infinite;
+    opacity: 0.7;
+  }
+
+  @keyframes roadMove {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: -20px 0;
+    }
+  }
+
+  .dramatic-entrance {
+    animation: dramaticEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes dramaticEntrance {
+    0% {
+      opacity: 0;
+      transform: translateY(60px) scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .rotate-in {
+    animation: rotateIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  @keyframes rotateIn {
+    0% {
+      opacity: 0;
+      transform: rotate(-10deg) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: rotate(0) scale(1);
+    }
+  }
+
+  .zoom-pan {
+    animation: zoomPan 20s ease infinite alternate;
+  }
+
+  @keyframes zoomPan {
+    0% {
+      transform: scale(1) translate(0, 0);
+    }
+    50% {
+      transform: scale(1.1) translate(-2%, -1%);
+    }
+    100% {
+      transform: scale(1.05) translate(2%, -2%);
+    }
+  }
+}

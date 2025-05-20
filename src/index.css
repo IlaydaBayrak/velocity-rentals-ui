@@ -99,9 +99,44 @@
     @apply transition-transform duration-300 hover:scale-[1.02];
   }
 
+  .perspective-effect {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  /* Car animation utilities */
+  .drive-by {
+    animation: driveBy 20s linear infinite;
+  }
+
+  @keyframes driveBy {
+    0% {
+      transform: translateX(-100%) scale(0.8);
+    }
+    50% {
+      transform: translateX(0%) scale(1);
+    }
+    100% {
+      transform: translateX(100%) scale(0.8);
+    }
+  }
+
+  .wheel-spin {
+    animation: wheelSpin 2s linear infinite;
+  }
+
+  @keyframes wheelSpin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
   /* Yeni animasyonlar ve geçişler */
   .card-hover-effect {
-    @apply transition-all duration-300 hover:shadow-xl hover:translate-y-[-5px];
+    @apply transition-all duration-300 hover:shadow-xl;
   }
 
   .pulse-effect {
@@ -195,4 +230,15 @@
       transform: translateY(0) scale(1);
     }
   }
+
+  /* 3D effect for cars */
+  .car-3d-hover {
+    transition: transform 0.5s ease;
+    transform-style: preserve-3d;
+  }
+  
+  .car-3d-hover:hover {
+    transform: perspective(1000px) rotateY(5deg) rotateX(3deg);
+  }
 }
+

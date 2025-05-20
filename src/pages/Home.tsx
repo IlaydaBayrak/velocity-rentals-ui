@@ -1,101 +1,160 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { cars as carsData } from "@/data/cars";
 import CarCard from "@/components/CarCard";
 import CarFilters from "@/components/CarFilters";
-import { cars } from "@/data/cars";
-import { Car } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Filter, Search } from "lucide-react";
+import CarouselBanner from "@/components/CarouselBanner";
+import { Car as CarType } from "@/types";
+import { motion } from "framer-motion";
 
 const Home: React.FC = () => {
+  const [cars, setCars] = useState<CarType[]>(carsData);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(false);
 
-  const filteredCars = cars.filter((car: Car) => {
-    // Filter by brand if any brand is selected
-    const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(car.brand);
-    
-    // Filter by year if any year is selected
-    const yearMatch = selectedYears.length === 0 || selectedYears.includes(car.year);
-    
+  useEffect(() => {
+    let filtered = [...carsData];
+
+    // Filter by brand
+    if (selectedBrands.length > 0) {
+      filtered = filtered.filter((car) => selectedBrands.includes(car.brand));
+      setActiveFilter(true);
+    }
+
     // Filter by price range
-    const priceMatch = car.price >= priceRange[0] && car.price <= priceRange[1];
-    
+    filtered = filtered.filter(
+      (car) => car.price >= priceRange[0] && car.price <= priceRange[1]
+    );
+
+    // Filter by year
+    if (selectedYears.length > 0) {
+      filtered = filtered.filter((car) => selectedYears.includes(car.year));
+      setActiveFilter(true);
+    }
+
     // Filter by search query
-    const searchMatch = 
-      car.brand.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      car.model.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return brandMatch && yearMatch && priceMatch && searchMatch;
-  });
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (car) =>
+          car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          car.model.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setActiveFilter(true);
+    }
+
+    if (
+      selectedBrands.length === 0 &&
+      selectedYears.length === 0 &&
+      !searchQuery &&
+      priceRange[0] === 0 &&
+      priceRange[1] === 500
+    ) {
+      setActiveFilter(false);
+    }
+
+    setCars(filtered);
+  }, [selectedBrands, priceRange, selectedYears, searchQuery]);
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 animate-fade-in">
-      <div className="px-4 py-8 bg-rentacar-blue">
-        <div className="container">
-          <h1 className="mb-4 text-2xl font-bold text-white md:text-3xl">Find Your Perfect Ride</h1>
-          
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="relative flex-grow">
-              <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by brand or model..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="bg-white md:hidden"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
+    <div className="container py-8 mx-auto">
+      <CarouselBanner />
+      
+      <div className="mt-10 mb-8">
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-3xl font-bold text-center text-rentacar-dark-blue mb-2"
+        >
+          Available Vehicles
+        </motion.h1>
+        <motion.div 
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="w-24 h-1 bg-rentacar-blue mx-auto"
+        ></motion.div>
       </div>
 
-      <div className="container py-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          <div className={`${showFilters ? 'block' : 'hidden'} md:block md:col-span-1`}>
-            <div className="sticky top-20">
-              <CarFilters
-                selectedBrands={selectedBrands}
-                setSelectedBrands={setSelectedBrands}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                selectedYears={selectedYears}
-                setSelectedYears={setSelectedYears}
+      <div className="flex flex-col md:flex-row gap-6">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full md:w-1/4"
+        >
+          <CarFilters
+            selectedBrands={selectedBrands}
+            setSelectedBrands={setSelectedBrands}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            selectedYears={selectedYears}
+            setSelectedYears={setSelectedYears}
+          />
+        </motion.div>
+
+        <div className="w-full md:w-3/4">
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for a car..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rentacar-blue"
               />
+              <motion.span 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="absolute right-3 top-3 text-sm text-gray-400"
+              >
+                {cars.length} {cars.length === 1 ? "vehicle" : "vehicles"} found
+              </motion.span>
             </div>
           </div>
-          
-          <div className="md:col-span-3">
-            {filteredCars.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-lg shadow">
-                <h3 className="mb-2 text-lg font-semibold">No cars found</h3>
-                <p className="text-gray-500">Try adjusting your filters to find more options.</p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <h2 className="text-xl font-semibold">Available Cars ({filteredCars.length})</h2>
-                </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredCars.map((car) => (
-                    <CarCard key={car.id} car={car} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+
+          {activeFilter && cars.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-8 text-center bg-white rounded-lg shadow-sm"
+            >
+              <h3 className="text-xl font-medium text-gray-600">No cars match your filters</h3>
+              <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
+            </motion.div>
+          ) : (
+            <motion.div 
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {cars.map((car) => (
+                <motion.div key={car.id} variants={item}>
+                  <CarCard car={car} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { cars as carsData } from "@/data/cars";
+import api from "@/api/axios"; // Axios import
 import CarCard from "@/components/CarCard";
 import CarFilters from "@/components/CarFilters";
 import CarouselBanner from "@/components/CarouselBanner";
@@ -8,34 +8,48 @@ import { Car as CarType } from "@/types";
 import { motion } from "framer-motion";
 
 const Home: React.FC = () => {
-  const [cars, setCars] = useState<CarType[]>(carsData);
+  const [cars, setCars] = useState<CarType[]>([]);
+  const [filteredCars, setFilteredCars] = useState<CarType[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState(false);
 
+  // 🔁 Backend'den veriyi çek
   useEffect(() => {
-    let filtered = [...carsData];
+    const fetchCars = async () => {
+      try {
+        const response = await api.get<CarType[]>("/cars");
+      setCars(response.data);
+      setFilteredCars(response.data);
 
-    // Filter by brand
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+      }
+    };
+
+    fetchCars();
+  }, []);
+
+  // 🔍 Filtreleme işlemi
+  useEffect(() => {
+    let filtered = [...cars];
+
     if (selectedBrands.length > 0) {
       filtered = filtered.filter((car) => selectedBrands.includes(car.brand));
       setActiveFilter(true);
     }
 
-    // Filter by price range
     filtered = filtered.filter(
       (car) => car.price >= priceRange[0] && car.price <= priceRange[1]
     );
 
-    // Filter by year
     if (selectedYears.length > 0) {
       filtered = filtered.filter((car) => selectedYears.includes(car.year));
       setActiveFilter(true);
     }
 
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         (car) =>
@@ -55,8 +69,8 @@ const Home: React.FC = () => {
       setActiveFilter(false);
     }
 
-    setCars(filtered);
-  }, [selectedBrands, priceRange, selectedYears, searchQuery]);
+    setFilteredCars(filtered);
+  }, [cars, selectedBrands, priceRange, selectedYears, searchQuery]);
 
   const container = {
     hidden: { opacity: 0 },

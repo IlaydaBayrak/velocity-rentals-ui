@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/api/axios";
 import {
   Table,
   TableBody,
@@ -23,14 +23,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Car } from "@/types";
-import { cars as initialCars } from "@/data/cars";
 import { useToast } from "@/components/ui/use-toast";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import CarForm from "@/components/CarForm";
 
 const Admin = () => {
   const { user } = useAuth();
-  const [cars, setCars] = useState<Car[]>(initialCars);
+  const [cars, setCars] = useState<Car[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentCar, setCurrentCar] = useState<Car | undefined>(undefined);
@@ -38,52 +37,80 @@ const Admin = () => {
   const [carToDelete, setCarToDelete] = useState<Car | null>(null);
   const { toast } = useToast();
 
-  // If not admin, redirect to home page
+  // ✅ Backend'den arabaları çek
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+       const response = await api.get<Car[]>("/cars");
+
+        setCars(response.data);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to load cars from backend." });
+      }
+    };
+
+    fetchCars();
+  }, []);
+
+  // ✅ Admin yetkisi yoksa yönlendir
   if (!user?.isAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  // Filter cars based on search query
   const filteredCars = cars.filter((car) =>
     car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
     car.model.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddCar = (newCar: Omit<Car, "id" | "image" | "available">) => {
-    const carToAdd: Car = {
-      id: Date.now().toString(),
-      image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=2670&auto=format&fit=crop",
-      available: true,
-      ...newCar
-    };
-    
-    setCars([...cars, carToAdd]);
-    toast({
-      title: "Car Added",
-      description: `${carToAdd.brand} ${carToAdd.model} has been added successfully.`
-    });
+  // ✅ Yeni araç ekle
+  const handleAddCar = async (newCar: Omit<Car, "id" | "image" | "available">) => {
+    try {
+      const response = await api.post<Car>("/cars", {
+
+        ...newCar,
+        image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=2670&auto=format&fit=crop",
+        available: true,
+      });
+
+      setCars(prev => [...prev, response.data]);
+      toast({ title: "Car Added", description: `${response.data.brand} added.` });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add car." });
+    }
   };
 
-  const handleEditCar = (updatedCar: Omit<Car, "id" | "image" | "available">) => {
+  // ✅ Araç güncelle
+  const handleEditCar = async (updatedCar: Omit<Car, "id" | "image" | "available">) => {
     if (!currentCar) return;
-    
-    const updatedCars = cars.map(car => 
-      car.id === currentCar.id 
-        ? { 
-            ...car, 
-            brand: updatedCar.brand, 
-            model: updatedCar.model, 
-            year: updatedCar.year, 
-            price: updatedCar.price 
-          } 
-        : car
-    );
-    
-    setCars(updatedCars);
-    toast({
-      title: "Car Updated",
-      description: `${updatedCar.brand} ${updatedCar.model} has been updated successfully.`
-    });
+
+    try {
+      const response = await api.put<Car>(`/cars/${currentCar.id}`, {
+
+        ...updatedCar,
+        image: currentCar.image,
+        available: currentCar.available,
+      });
+
+      setCars(prev => prev.map(car => car.id === currentCar.id ? response.data : car));
+      toast({ title: "Car Updated", description: `${response.data.brand} updated.` });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update car." });
+    }
+  };
+
+  // ✅ Araç sil
+  const handleDelete = async () => {
+    if (!carToDelete) return;
+
+    try {
+      await api.delete(`/cars/${carToDelete.id}`);
+      setCars(prev => prev.filter(car => car.id !== carToDelete.id));
+      toast({ title: "Car Deleted", description: `${carToDelete.brand} deleted.` });
+      setDeleteDialogOpen(false);
+      setCarToDelete(null);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete car." });
+    }
   };
 
   const openEditForm = (car: Car) => {
@@ -94,21 +121,6 @@ const Admin = () => {
   const confirmDelete = (car: Car) => {
     setCarToDelete(car);
     setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = () => {
-    if (!carToDelete) return;
-    
-    const updatedCars = cars.filter(car => car.id !== carToDelete.id);
-    setCars(updatedCars);
-    
-    toast({
-      title: "Car Deleted",
-      description: `${carToDelete.brand} ${carToDelete.model} has been removed from the inventory.`
-    });
-    
-    setDeleteDialogOpen(false);
-    setCarToDelete(null);
   };
 
   return (
@@ -151,6 +163,7 @@ const Admin = () => {
                   <TableHead>Year</TableHead>
                   <TableHead>Price/Day</TableHead>
                   <TableHead>Status</TableHead>
+                   <TableHead>Image</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
